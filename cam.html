@@ -28,9 +28,9 @@
       document.getElementById("snap").addEventListener("click", function() {
         const image = new Image()
         context.drawImage(video, 0, 0, 640, 480);
-        var imageB64 = canvas.toDataURL('image/png',1)
         // Get Base64 Data
-        imageB64 = imageB64.slice(imageB64.indexOf(',') + 1)
+        var imageB64 = canvas.toDataURL('image/png',1)
+        // console.log(imageB64)
 
         var xhr = new XMLHttpRequest();
         xhr.open("POST", "http://localhost:8000", true);

@@ -1,0 +1,16 @@
+python -m ensurepip --upgrade
+pip install mysql-connector
+
+Schema:
+
+create database signin;
+use signin;
+create table signin(name varchar(50), signin_date datetime, photo longtext);
+
+run server:
+python server.py
+
+visit page
+signin: http://localhost:8000/signin
+list: http://localhost:8000/list
+

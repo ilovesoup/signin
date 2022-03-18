@@ -31,18 +31,38 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         mydb.commit()
         csr.close()
 
+    def list_gen(self):
+        csr = mydb.cursor(buffered=True)
+        csr.execute("SELECT name, signin_date, photo FROM signin")
+        res = csr.fetchall()
+        content = open("list.html").read()
+        body = "";
+        for x in res:
+            body += "<tr>"
+            body += "<td>" + x[0] + "</td>"
+            body += "<td>" + x[1].strftime('%Y-%m-%d %H:%M:%S') + "</td>"
+            body += "<td>" + "<img style='display:block; width:100px;height:100px;' src='" + x[2] + "'/> </td>"
+            body += "</tr>"
+        print body
+        content = content.replace("tag", body)
+        csr.close()
+        return content
+
 
     def do_GET(self):
-        if self.path == '/':
-            self.path = '/cam.html'
+        content = ""
         try:
-            file_to_open = open(self.path[1:]).read()
+            if self.path == "/signin":
+                content = open("cam.html").read()
+            else:
+                content = self.list_gen()
+
             self.send_response(200)
         except:
-            file_to_open = "File not found"
+            content = "Something Wrong..."
             self.send_response(404)
         self.end_headers()
-        self.wfile.write(bytes(file_to_open))
+        self.wfile.write(bytes(content))
 
 try:
     mydb = mysql.connector.connect(host = "localhost", port=4000 ,user = "root", password = "", database="signin")
