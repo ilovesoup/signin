@@ -1,62 +1,46 @@
 <html>
   <head>
-    <meta charset="UTF-8">
-    <script src="https://cdn.jsdelivr.net/npm/@authing/native-js-ui-components"></script>
-    <link href="https://cdn.jsdelivr.net/npm/@authing/native-js-ui-components/lib/index.min.css" rel="stylesheet"></link>
   </head>
   <body>
-    <script>
-      var guard = new AuthingNativeJsUIComponents.AuthingGuard('APPID', {
-        apiHost: 'https://pingcap.authing.cn',
-        mode: 'modal',
-      })
-      
-      guard.on('load', function (authClient) {
-        authClient.getCurrentUser().then(function(uInfo) {
-          if (!uInfo || !uInfo.token) {
-            location.href = '/auth'
-            return
-          }
-          console.log(uInfo)
-          var video = document.getElementById('video')
-          // Get access to the camera!
-          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            // Not adding `{ audio: true }` since we only want video now
-            navigator.mediaDevices.getUserMedia({ video: true }).then(function (stream) {
-              //video.src = window.URL.createObjectURL(stream);
-              video.srcObject = stream
-              video.play()
-            })
-          } else {
-            console.log('no support mediaDevices.getUserMedia')
-          }
-          // Elements for taking the snapshot
-          var canvas = document.getElementById('canvas')
-          var context = canvas.getContext('2d')
-          var video = document.getElementById('video')
-
-          // Trigger photo take
-          document.getElementById('snap').addEventListener('click', function () {
-            const image = new Image()
-            context.drawImage(video, 0, 0, 640, 480)
-            // Get Base64 Data
-            var imageB64 = canvas.toDataURL('image/png', 1)
-            // console.log(imageB64)
-
-            var xhr = new XMLHttpRequest()
-            xhr.open('POST', 'http://localhost:8000', true)
-            xhr.setRequestHeader('Content-Type', 'application/json')
-            xhr.setRequestHeader('Authorization', 'Bearer ' + uInfo.token)
-            xhr.send(JSON.stringify({ name: uInfo.name, photo: imageB64 }))
-          })
-        }).catch(function(e) {
-          console.error(e)
-          location.href = '/auth'
-        })
-      })
-    </script>
     <video id="video" width="640" height="480" autoplay></video>
     <button id="snap">Sign In</button>
     <canvas id="canvas" width="640" height="480"></canvas>
+    <script>
+      const queryString = window.location.search;
+      const urlParams = new URLSearchParams(queryString);
+      const token = urlParams.get('token')
+
+      var video = document.getElementById('video');
+      // Get access to the camera!
+      if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+          // Not adding `{ audio: true }` since we only want video now
+          navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+              //video.src = window.URL.createObjectURL(stream);
+              video.srcObject = stream;
+              video.play();
+          });
+      }else{
+        console.log('no support mediaDevices.getUserMedia')
+      }
+      // Elements for taking the snapshot
+      var canvas = document.getElementById('canvas');
+      var context = canvas.getContext('2d');
+      var video = document.getElementById('video');
+
+      
+      // Trigger photo take
+      document.getElementById("snap").addEventListener("click", function() {
+        const image = new Image()
+        context.drawImage(video, 0, 0, 640, 480);
+        // Get Base64 Data
+        var imageB64 = canvas.toDataURL('image/png',1)
+        // console.log(imageB64)
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://localhost:8000", true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify({'token': token, 'photo': imageB64}));
+      });
+    </script>
   </body>
 </html>

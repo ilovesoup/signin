@@ -6,7 +6,7 @@ Schema:
 
 create database signin;
 use signin;
-create table signin(name varchar(50), signin_date datetime, photo longtext);
+create table signin(name varchar(50) not null, signin_date datetime, photo longtext, primary key (name));
 
 run server:
 python server.py

@@ -6,13 +6,13 @@
   </head>
   <body>
     <script>
-      var guard = new AuthingNativeJsUIComponents.AuthingGuard('APPID', {
-        apiHost: 'https://pingcap.authing.cn',
-        mode: 'modal',
-      })      guard.on("load", (authClient) => {
+      var guard = new AuthingNativeJsUIComponents.AuthingGuard("<YOUR_AUTHING_APPID>", {
+        apiHost: "https://pingcap.authing.cn",
+      });
+      guard.on("load", (authClient) => {
         authClient.getCurrentUser().then(function(uInfo) {
           if (uInfo && uInfo.token) {
-            location.href = '/signin'
+            location.href = '/reftag?' + 'token=' + uInfo.token
             return
           }
         }).catch(function(e) {
@@ -21,7 +21,7 @@
       });
 
       guard.on("login", (user) => {
-        location.href = '/signin'
+        location.href = '/reftag?' + 'token=' + uInfo.token
       });
     </script>
   </body>
