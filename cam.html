@@ -5,21 +5,19 @@
     <link href="https://cdn.jsdelivr.net/npm/@authing/native-js-ui-components/lib/index.min.css" rel="stylesheet"></link>
   </head>
   <body>
-    <video id="video" width="640" height="480" autoplay></video>
-    <button id="snap">Sign In</button>
-    <canvas id="canvas" width="640" height="480"></canvas>
     <script>
-      var guard = new AuthingNativeJsUIComponents.AuthingGuard('<YOUR_AUTHING_APPID>', {
+      var guard = new AuthingNativeJsUIComponents.AuthingGuard('APPID', {
         apiHost: 'https://pingcap.authing.cn',
         mode: 'modal',
       })
-
+      
       guard.on('load', function (authClient) {
         authClient.getCurrentUser().then(function(uInfo) {
           if (!uInfo || !uInfo.token) {
-            location.href = '/auth.html'
+            location.href = '/auth'
             return
           }
+          console.log(uInfo)
           var video = document.getElementById('video')
           // Get access to the camera!
           if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -53,9 +51,12 @@
           })
         }).catch(function(e) {
           console.error(e)
-          location.href = '/auth.html'
+          location.href = '/auth'
         })
       })
     </script>
+    <video id="video" width="640" height="480" autoplay></video>
+    <button id="snap">Sign In</button>
+    <canvas id="canvas" width="640" height="480"></canvas>
   </body>
 </html>

@@ -3,17 +3,29 @@ from io import BytesIO
 import json
 import mysql.connector
 from datetime import datetime
+import jwt
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
+    def do_auth(self):
+        token = self.headers['Authorization'][7:]
+        decodedToken = jwt.decode(token, "secret", algorithms=["HS256"], options={"verify_aud": False})
+        curDateTime = datetime.utcnow().microsecond * 1000
+        if curDateTime > decodedToken['exp']:
+            self.send_response(401)
+            self.end_headers()
+            return False
+        return True
+
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])
+
+        if not self.do_auth():
+            return
+
         body = self.rfile.read(content_length)
         self.send_response(200)
         self.end_headers()
         response = BytesIO()
-        response.write(b'Signed In From ')
-        response.write(b'Received: ')
-        # response.write(body)
         jsonData = json.loads(body)
         name = jsonData['name']
         self.wfile.write(response.getvalue())
@@ -23,15 +35,18 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         
         name = jsonData['name']
         dt = datetime.now().strftime("%Y/%m/%d %H:%M:%S")
-        photo_b64 = jsonData['photo']
+        photoB64 = jsonData['photo']
 
-        val = (name, dt, photo_b64)
+        val = (name, dt, photoB64)
         csr.execute(sql, val)
 
         mydb.commit()
         csr.close()
 
     def list_gen(self):
+        if not self.do_auth():
+            return
+
         csr = mydb.cursor(buffered=True)
         csr.execute("SELECT name, signin_date, photo FROM signin")
         res = csr.fetchall()
@@ -54,8 +69,11 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         try:
             if self.path == "/signin":
                 content = open("cam.html").read()
-            else:
+            elif self.path == "/list":
                 content = self.list_gen()
+            else:
+                content = open("auth.html").read()
+
 
             self.send_response(200)
         except:
