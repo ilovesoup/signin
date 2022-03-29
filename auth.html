@@ -1,28 +1,31 @@
 <html>
-  <head>
+
+<head>
     <meta charset="UTF-8">
     <script src="https://cdn.jsdelivr.net/npm/@authing/native-js-ui-components"></script>
     <link href="https://cdn.jsdelivr.net/npm/@authing/native-js-ui-components/lib/index.min.css" rel="stylesheet"></link>
-  </head>
-  <body>
-    <script>
-      var guard = new AuthingNativeJsUIComponents.AuthingGuard("<YOUR_AUTHING_APPID>", {
-        apiHost: "https://pingcap.authing.cn",
-      });
-      guard.on("load", (authClient) => {
-        authClient.getCurrentUser().then(function(uInfo) {
-          if (uInfo && uInfo.token) {
-            location.href = '/reftag?' + 'token=' + uInfo.token
-            return
-          }
-        }).catch(function(e) {
-          // ignore
-        })
-      });
+</head>
 
-      guard.on("login", (user) => {
-        location.href = '/reftag?' + 'token=' + uInfo.token
-      });
+<body>
+    <script>
+        var guard = new AuthingNativeJsUIComponents.AuthingGuard("", {
+            apiHost: "https://pingcap.authing.cn",
+        });
+        guard.on("load", (authClient) => {
+            authClient.getCurrentUser().then(function(uInfo) {
+                if (uInfo && uInfo.token) {
+                    location.href = '/reftag?' + 'token=' + uInfo.token
+                    return
+                }
+            }).catch(function(e) {
+                // ignore
+            })
+        });
+
+        guard.on("login", (uInfo) => {
+            location.href = '/reftag?' + 'token=' + uInfo.token
+        });
     </script>
-  </body>
+</body>
+
 </html>
