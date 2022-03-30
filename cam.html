@@ -5,12 +5,13 @@
 
 <body>
     <video id="video" width="640" height="480" autoplay></video>
-    <button id="snap">Sign In</button>
+    <button id="snap">Check In</button>
     <canvas id="canvas" width="640" height="480"></canvas>
     <script>
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
         const token = urlParams.get('token')
+        const name = urlParams.get('name')
 
         var video = document.getElementById('video');
         // Get access to the camera!
@@ -41,13 +42,14 @@
                 // console.log(imageB64)
 
             var xhr = new XMLHttpRequest();
-            xhr.open("POST", "http://localhost:8000/", true);
+            xhr.open("POST", "pingcap_host", true);
             xhr.setRequestHeader('Content-Type', 'application/json');
             xhr.onload = function() {
                 // fixme: redirect 
                 window.location = xhr.responseURL
             };
             xhr.send(JSON.stringify({
+                'name': name,
                 'token': token,
                 'photo': imageB64
             }));

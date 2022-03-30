@@ -1,0 +1,6 @@
+{
+    "host": "http://localhost:8000",
+    "db": "localhost",
+    "app_id": "",
+    "app_secret": ""
+}
