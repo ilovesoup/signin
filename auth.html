@@ -8,13 +8,13 @@
 
 <body>
     <script>
-        var guard = new AuthingNativeJsUIComponents.AuthingGuard("", {
+        var guard = new AuthingNativeJsUIComponents.AuthingGuard("app_id", {
             apiHost: "https://pingcap.authing.cn",
         });
         guard.on("load", (authClient) => {
             authClient.getCurrentUser().then(function(uInfo) {
                 if (uInfo && uInfo.token) {
-                    location.href = '/reftag?' + 'token=' + uInfo.token
+                    location.href = '/reftag?' + 'token=' + uInfo.token + '&name=' + uInfo.name;
                     return
                 }
             }).catch(function(e) {
@@ -23,7 +23,7 @@
         });
 
         guard.on("login", (uInfo) => {
-            location.href = '/reftag?' + 'token=' + uInfo.token
+            location.href = '/reftag?' + 'token=' + uInfo.token + '&name=' + uInfo.name;
         });
     </script>
 </body>
