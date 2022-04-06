@@ -1,6 +1,9 @@
 {
     "host": "http://localhost:8000",
     "db": "localhost",
+    "db_port": 3306,
+    "db_user": "root",
+    "db_pw": "123456",
     "app_id": "",
     "app_secret": ""
 }

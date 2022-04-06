@@ -1,8 +1,7 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
-from io import BytesIO
 import json
-from matplotlib.font_manager import json_load
+import time
 import mysql.connector.pooling
 from datetime import datetime
 import jwt
@@ -11,9 +10,7 @@ import threading
 # python3
 import urllib.parse as urlparse
 
-from pendulum import date
-# python2
-# import urlparse
+finish = False
 
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
@@ -43,6 +40,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
         content = authHtml
+        print(content)
         content = content.replace("reftag", reftag)
         self.wfile.write(bytes(content, encoding='utf8'))
 
@@ -61,9 +59,9 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         body = self.rfile.read(content_length)
         jsonData = json.loads(body)
 
-        # res = self.do_auth(jsonData['token'], None)
-        # if not res[0]:
-        #     return
+        res = self.do_auth(jsonData['token'], None)
+        if not res[0]:
+            return
 
         self.send_response(302)
         # new_path = '%s%s' % (
@@ -90,37 +88,59 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             cursor.close()
             mydbpool.put_connection(conn)
 
-    def list_gen(self, token):
+    def query_list(self, token, offset):
+        # if not self.do_auth(token, "auth")[0]:
+        #     return
+
+        self.send_response(200)
+        self.end_headers()
+
+        data = {}
+        data["finish"] = finish
+        pics = []
+        if not finish:
+            try:
+                conn = mydbpool.get_connection()
+                cursor = conn.cursor(buffered=True)
+                begin_clock = time.perf_counter()
+                cursor.execute(
+                    "SELECT name, signin_date, photo FROM signin limit 10 offset %s" % (offset))
+                res = cursor.fetchall()
+                print("table length :", len(res))
+                for x in res:
+                    if x[0] == None or x[1] == None or x[2] == None:
+                        continue
+                    pics += [x[2]]
+                print("list-gen process:", time.perf_counter() - begin_clock)
+            except Exception as e:
+                print(e)
+            finally:
+                cursor.close()
+                mydbpool.put_connection(conn)
+
+        data["next_offset"] = int(offset) + len(pics)
+        data["pics"] = pics
+        self.wfile.write(bytes(json.dumps(data), encoding='utf8'))
+
+    def list(self, token):
         if not self.do_auth(token, "list")[0]:
             return
 
         self.send_response(200)
         self.end_headers()
+        content = listHtml
+        self.wfile.write(bytes(content, encoding='utf8'))
 
-        try:
-            conn = mydbpool.get_connection()
-            cursor = conn.cursor(buffered=True)
-            cursor.execute("SELECT name, signin_date, photo FROM signin")
-            res = cursor.fetchall()
-            print("table length :", len(res))
-            content = listHtml
-            body = ""
-            for x in res:
-                if x[0] == None or x[1] == None or x[2] == None:
-                    continue
-                body += "<tr>"
-                body += "<td>" + x[0] + "</td>"
-                body += "<td>" + x[1].strftime('%Y-%m-%d %H:%M:%S') + "</td>"
-                body += "<td>" + "<img style='display:block; width:100px;height:100px;' src='" + \
-                    x[2] + "'/> </td>"
-                body += "</tr>"
-            content = content.replace("tag", body)
-            self.wfile.write(bytes(content, encoding='utf8'))
-        except Exception as e:
-            print(e)
-        finally:
-            cursor.close()
-            mydbpool.put_connection(conn)
+    def finish(self, token):
+        # todo cjl
+        # if not self.do_auth(token, "auth")[0]:
+        #     return
+
+        global finish
+        finish = True
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(bytes('finished', encoding='utf8'))
 
     def do_GET(self):
         thread = threading.current_thread()
@@ -139,9 +159,13 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             elif pr.path == "/login":
                 self.auth('signin')
             elif pr.path == "/list":
-                self.list_gen(token)
+                self.list(token)
+            elif pr.path == "/query_list":
+                self.query_list(token, query["offset"][0])
             elif pr.path == "/health":
                 self.health()
+            elif pr.path == "/finish":
+                self.finish(token)
             elif pr.path == "/thanks":
                 self.thanks()
             else:
@@ -185,8 +209,9 @@ if __name__ == "__main__":
 
         mydbpool = ReallyMySQLConnectionPool(pool_name="signin",
                                              pool_size=32,
-                                             pool_reset_session=True,
-                                             host=cfg['db'], port=3306, user="root", password="123456",
+                                             pool_reset_session=False,
+                                             host=cfg['db'], port=cfg['db_port'],
+                                             user=cfg['db_user'], password=cfg['db_pw'],
                                              database="signin", auth_plugin='mysql_native_password')
 
         authHtml = open("auth.html").read()
