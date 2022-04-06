@@ -1,4 +1,5 @@
 from http.server import HTTPServer, BaseHTTPRequestHandler
+import re
 from socketserver import ThreadingMixIn
 import json
 import time
@@ -153,8 +154,26 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             if "token" in query:
                 token = query['token'][0]
 
+        print(self.path)
         try:
-            if pr.path == "/signin":
+            if re.match(r"/front/.*", self.path):
+                content = open(self.path[1:]).read()
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(bytes(content, encoding='utf8'))
+            elif re.match(r"/assets/.*", self.path):
+                content = open('front'+self.path).read()
+                self.send_response(200)
+                if self.path.endswith('js'):
+                    self.send_header("Content-type", "text/javascript")
+                elif self.path.endswith('css'):
+                    self.send_header("Content-type", "text/css")
+                elif self.path.endswith('svg'):
+                    self.send_header("Content-type", "image/svg+xml")
+                    self.headers.set_type('image/svg+xml')
+                self.end_headers()
+                self.wfile.write(bytes(content, encoding='utf8'))
+            elif pr.path == "/signin":
                 self.signin(token)
             elif pr.path == "/login":
                 self.auth('signin')
